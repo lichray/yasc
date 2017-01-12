@@ -21,6 +21,10 @@ install_manifest.txt
 Testing/
 DartConfiguration.tcl
 
+# test executable
+tests/run
+tests/run.exe
+
 # Visual Studio
 /*.vcxproj
 /*.vcxproj.filters
