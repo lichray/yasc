@@ -2,7 +2,6 @@
 
 #include <pegtl.hh>
 #include <pegtl/trace.hh>
-#include <pegtl/contrib/raw_string.hh>
 
 namespace yasc
 {
@@ -12,7 +11,9 @@ namespace syntax
 using namespace pegtl;
 
 struct simple_comment : seq<two<'-'>, until<eolf>> {};
-struct bracketed_comment : raw_string<'/', '*', '/'> {};
+struct bracketed_comment :
+	if_must<string<'/', '*'>, until<string<'*', '/'>>>
+{};
 struct comment : disable<sor<simple_comment, bracketed_comment>> {};
 
 struct separator : sor<ascii::space, comment> {};
@@ -65,9 +66,13 @@ struct query_specification :
 
 struct sign : one<'+', '-'> {};
 struct nonzero_digit : ranges<'1', '9'> {};
-struct decimal_literal : sor<one<'0'>, seq<nonzero_digit, star<digit>>> {};
+struct decimal_literal :
+	sor<one<'0'>, seq<nonzero_digit, star<digit>>>
+{};
 struct signed_numeric_literal : seq<opt<sign>, decimal_literal> {};
 struct grammar : must<signed_numeric_literal, eof> {};
+
+struct query_grammar : must<seps, query_specification, eof> {};
 
 }
 
@@ -107,7 +112,7 @@ struct action<syntax::table_reference>
 Query parse_query(string_view s)
 {
 	Query q;
-	pegtl::parse_memory<syntax::query_specification, action>(
+	pegtl::parse_memory<syntax::query_grammar, action>(
 	    s.data(), s.data() + s.size(), "<input>", q);
 	return q;
 }
