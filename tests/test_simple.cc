@@ -23,7 +23,7 @@ TEST_CASE("query without filter")
 	REQUIRE(*q.from.begin() == "meow");
 
 	q = yasc::parse_query(R"q(
-	select distinct foo  -- short
+        select distinct foo  -- short
           from a /* middle */, /**
             long
             */  b, c
