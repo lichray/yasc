@@ -2,10 +2,30 @@
 
 #include <yasc/yasc.h>
 
-TEST_CASE("empty")
+TEST_CASE("query without filter")
 {
-	REQUIRE(yasc::parse_query("+312234") == "+312234");
-	REQUIRE(yasc::parse_query("-4") == "-4");
-	REQUIRE(yasc::parse_query("0") == "0");
-	REQUIRE_THROWS(yasc::parse_query("00"));
+	auto q = yasc::parse_query("SELECT ALL * FROM T1, T2");
+
+	REQUIRE(q.distinct == false);
+	REQUIRE(q.select.all_columns() == true);
+	REQUIRE(q.from.count() == 2);
+	REQUIRE(q.from[0] == "T1");
+	REQUIRE(q.from[1] == "T2");
+
+	q = yasc::parse_query("select foo, \"\"\"b ar\" from meow");
+
+	REQUIRE(q.distinct == false);
+	REQUIRE(q.select.all_columns() == false);
+	REQUIRE(q.select.count() == 2);
+	REQUIRE(q.select[0] == "foo");
+	// REQUIRE(q.select[1] == "\"b ar");
+	REQUIRE(q.from.count() == 1);
+	REQUIRE(*q.from.begin() == "meow");
+}
+
+TEST_CASE("syntax errors in query")
+{
+	REQUIRE_THROWS(yasc::parse_query("select"));
+	REQUIRE_THROWS(yasc::parse_query("select a, b, from c"));
+	REQUIRE_THROWS(yasc::parse_query("select a, b where 1"));
 }
