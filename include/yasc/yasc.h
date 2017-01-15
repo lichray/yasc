@@ -110,7 +110,6 @@ struct SearchCondition
 {
 	std::unique_ptr<logical::lambda> f =
 	    std::make_unique<logical::lambda>();
-	std::vector<logical::argument> pstack;
 };
 
 struct Query

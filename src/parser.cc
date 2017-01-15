@@ -1,4 +1,4 @@
-#include <yasc/yasc.h>
+#include "parser.h"
 
 #include <pegtl.hh>
 #include <pegtl/trace.hh>
@@ -167,7 +167,7 @@ template <>
 struct action<syntax::str_distinct>
 {
 	template <typename Input>
-	static void apply(Input const&, Query& q)
+	static void apply(Input const&, states& st, Query& q)
 	{
 		q.distinct = true;
 	}
@@ -177,7 +177,7 @@ template <>
 struct action<syntax::select_sublist>
 {
 	template <typename Input>
-	static void apply(Input const& in, Query& q)
+	static void apply(Input const& in, states& st, Query& q)
 	{
 		q.select.append(in.string());
 	}
@@ -187,7 +187,7 @@ template <>
 struct action<syntax::table_reference>
 {
 	template <typename Input>
-	static void apply(Input const& in, Query& q)
+	static void apply(Input const& in, states& st, Query& q)
 	{
 		q.from.append(in.string());
 	}
@@ -197,9 +197,9 @@ template <>
 struct action<syntax::boolean_test>
 {
 	template <typename Input>
-	static void apply(Input const& in, Query& q)
+	static void apply(Input const& in, states& st, Query& q)
 	{
-		q.where.pstack.emplace_back(in.string());
+		st.pstack.emplace_back(in.string());
 	}
 };
 
@@ -207,19 +207,19 @@ template <logical::op eta>
 struct condition_action
 {
 	template <typename Input>
-	static void apply(Input const& in, Query& q)
+	static void apply(Input const& in, states& st, Query& q)
 	{
-		if (q.where.pstack.size() > 1)
+		if (st.pstack.size() > 1)
 		{
 			auto g = std::make_unique<logical::lambda>(eta);
-			swap(g->args, q.where.pstack);
+			swap(g->args, st.pstack);
 			q.where.f->args.emplace_back(std::move(g));
 		}
-		else if (q.where.pstack.size() == 1)
+		else if (st.pstack.size() == 1)
 		{
 			q.where.f->args.push_back(
-			    std::move(q.where.pstack.back()));
-			q.where.pstack.pop_back();
+			    std::move(st.pstack.back()));
+			st.pstack.pop_back();
 		}
 		else if (q.where.f->args.size() > 1)
 		{
@@ -245,15 +245,15 @@ template <>
 struct action<syntax::negative_test>
 {
 	template <typename Input>
-	static void apply(Input const& in, Query& q)
+	static void apply(Input const& in, states& st, Query& q)
 	{
-		if (not q.where.pstack.empty())
+		if (not st.pstack.empty())
 		{
 			auto g = std::make_unique<logical::lambda>(
 			    logical::op::negation);
-			g->args.emplace_back(std::move(q.where.pstack.back()));
-			q.where.pstack.pop_back();
-			q.where.pstack.emplace_back(std::move(g));
+			g->args.emplace_back(std::move(st.pstack.back()));
+			st.pstack.pop_back();
+			st.pstack.emplace_back(std::move(g));
 		}
 	}
 };
@@ -262,7 +262,7 @@ template <>
 struct action<syntax::where_clause>
 {
 	template <typename Input>
-	static void apply(Input const& in, Query& q)
+	static void apply(Input const& in, states& st, Query& q)
 	{
 		auto& f = q.where.f;
 		if (f->args.empty())
@@ -276,9 +276,10 @@ struct action<syntax::where_clause>
 
 Query parse_query(string_view s)
 {
+	states st;
 	Query q;
 	pegtl::parse_memory<syntax::query_grammar, action>(
-	    s.data(), s.data() + s.size(), "<input>", q);
+	    s.data(), s.data() + s.size(), "<input>", st, q);
 	return q;
 }
 
