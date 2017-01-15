@@ -1,5 +1,7 @@
 #include "parser.h"
 
+#include <stdlib.h>
+
 #include <pegtl.hh>
 #include <pegtl/trace.hh>
 
@@ -71,15 +73,13 @@ struct nonzero_digit : ranges<'1', '9'> {};
 struct decimal_literal :
 	sor<one<'0'>, seq<nonzero_digit, star<digit>>>
 {};
-struct signed_numeric_literal : seq<opt<sign>, decimal_literal> {};
-
-struct literal : signed_numeric_literal {};
+struct integer_literal : seq<opt<sign>, decimal_literal> {};
 
 struct column_name : identifier {};
 struct column_reference :
 	seq<opt<table_name, one<'.'>>, column_name>
 {};
-struct row_value_expression : sor<column_reference, literal> {};
+struct row_value_expression : sor<column_reference, integer_literal> {};
 
 struct comp_op :
 	sor
@@ -102,12 +102,13 @@ struct comparison_predicate :
 	>
 {};
 
+struct not_null : pegtl_istring_t("not") {};
 struct null_predicate :
 	seq
 	<
 	    row_value_expression, seps,
 	    pegtl_istring_t("is"), seps,
-	    opt<pegtl_istring_t("not"), seps>,
+	    opt<not_null, seps>,
 	    pegtl_istring_t("null")
 	>
 {};
@@ -194,12 +195,94 @@ struct action<syntax::table_reference>
 };
 
 template <>
+struct action<syntax::comp_op>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query& q)
+	{
+		auto c = in.peek_char();
+		if (c == '=')
+			st.pending = xpr::op::equals;
+		else if (in.size() == 2)
+		{
+			auto c2 = in.peek_char(1);
+			if (c2 == '>')
+				st.pending = xpr::op::not_equals;
+			else if (c == '<')
+				st.pending = xpr::op::less_than_or_equals;
+			else if (c == '>')
+				st.pending = xpr::op::greater_than_or_equals;
+		}
+		else if (c == '<')
+			st.pending = xpr::op::less_than;
+		else if (c == '>')
+			st.pending = xpr::op::greater_than;
+	}
+};
+
+
+template <>
+struct action<syntax::not_null>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query&)
+	{
+		st.pending = xpr::op::is_not_null;
+	}
+};
+
+template <>
+struct action<syntax::null_predicate>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query&)
+	{
+		if (st.pending != xpr::op::is_not_null)
+			st.pending = xpr::op::is_null;
+	}
+};
+
+template <>
+struct action<syntax::integer_literal>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query&)
+	{
+		auto p = const_cast<char*>(in.end());
+		int64_t v = strtoll(in.begin(), &p, 10);
+		st.vstack.emplace_back(v);
+	}
+};
+
+template <>
+struct action<syntax::column_reference>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query&)
+	{
+		st.vstack.emplace_back(xpr::column{ in.string() });
+	}
+};
+
+template <>
 struct action<syntax::boolean_test>
 {
 	template <typename Input>
 	static void apply(Input const& in, states& st, Query& q)
 	{
-		st.pstack.emplace_back(in.string());
+		if (st.pending == xpr::op::is_null or
+		    st.pending == xpr::op::is_not_null)
+			st.pstack.emplace_back(st.pending,
+			                       std::move(st.vstack.back()));
+		else
+		{
+			auto y = std::move(st.vstack.back());
+			st.vstack.pop_back();
+			st.pstack.emplace_back(st.pending,
+			                       std::move(st.vstack.back()),
+			                       std::move(y));
+		}
+		st.vstack.pop_back();
 	}
 };
 

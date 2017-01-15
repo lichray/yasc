@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdex/string_view.h>
+#include <mapbox/variant.hpp>
 
 #if defined(_MSC_VER)
 #include <ciso646>
@@ -13,4 +14,6 @@ using stdex::wstring_view;
 using stdex::u16string_view;
 using stdex::u32string_view;
 using stdex::basic_string_view;
+
+using mapbox::util::variant;
 }

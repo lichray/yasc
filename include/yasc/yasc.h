@@ -77,6 +77,36 @@ private:
 	std::vector<std::string> v_;
 };
 
+namespace xpr
+{
+
+struct column
+{
+	std::string id;
+};
+
+using row_value = variant<int64_t, double, std::string, column>;
+
+enum struct op
+{
+	equals,
+	not_equals,
+	less_than,
+	greater_than,
+	less_than_or_equals,
+	greater_than_or_equals,
+	is_null,
+	is_not_null,
+};
+
+struct predicate
+{
+	op f;
+	xpr::row_value x, y;
+};
+
+}
+
 namespace logical
 {
 
@@ -88,11 +118,20 @@ enum struct op
 struct lambda;
 struct argument
 {
-	explicit argument(std::string s) : test(std::move(s)) {}
+	explicit argument(xpr::op op, xpr::row_value&& x)
+	    : test{ op, std::move(x) }
+	{
+	}
+
+	explicit argument(xpr::op op, xpr::row_value&& x, xpr::row_value&& y)
+	    : test{ op, std::move(x), std::move(y) }
+	{
+	}
+
 	explicit argument(std::unique_ptr<lambda>&& e) : f(std::move(e)) {}
 
 	std::unique_ptr<lambda> f;
-	std::string test;
+	xpr::predicate test;
 };
 
 struct lambda
