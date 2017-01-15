@@ -3,6 +3,7 @@
 #include "qoi.h"
 
 #include <vector>
+#include <memory>
 
 namespace yasc
 {
@@ -76,8 +77,40 @@ private:
 	std::vector<std::string> v_;
 };
 
+namespace logical
+{
+
+enum struct op
+{
+	identity, conjunction, disjunction, negation
+};
+
+struct lambda;
+struct argument
+{
+	explicit argument(std::string s) : test(std::move(s)) {}
+	explicit argument(std::unique_ptr<lambda>&& e) : f(std::move(e)) {}
+
+	std::unique_ptr<lambda> f;
+	std::string test;
+};
+
+struct lambda
+{
+	lambda() = default;
+	explicit lambda(op x) : eta(x) {}
+
+	op eta;
+	std::vector<argument> args;
+};
+
+}
+
 struct SearchCondition
 {
+	std::unique_ptr<logical::lambda> f =
+	    std::make_unique<logical::lambda>();
+	std::vector<logical::argument> pstack;
 };
 
 struct Query

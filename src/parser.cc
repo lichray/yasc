@@ -115,6 +115,8 @@ struct null_predicate :
 struct predicate : sor<comparison_predicate, null_predicate> {};
 
 struct search_condition;
+struct boolean_primary : predicate {};
+/*
 struct boolean_primary :
 	sor
 	<
@@ -122,12 +124,12 @@ struct boolean_primary :
 	    if_must<one<'('>, seps, search_condition, one<')'>>
 	>
 {};
+*/
 
 struct boolean_test : boolean_primary {};
 
-struct boolean_factor :
-	seq<opt<pegtl_istring_t("not"), seps>, boolean_test>
-{};
+struct negative_test : if_must<pegtl_istring_t("not"), seps, boolean_test> {};
+struct boolean_factor : sor<negative_test, boolean_test> {};
 
 struct boolean_term :
 	left_assoc<boolean_factor, pegtl_istring_t("and")>
@@ -188,6 +190,87 @@ struct action<syntax::table_reference>
 	static void apply(Input const& in, Query& q)
 	{
 		q.from.append(in.string());
+	}
+};
+
+template <>
+struct action<syntax::boolean_test>
+{
+	template <typename Input>
+	static void apply(Input const& in, Query& q)
+	{
+		q.where.pstack.emplace_back(in.string());
+	}
+};
+
+template <logical::op eta>
+struct condition_action
+{
+	template <typename Input>
+	static void apply(Input const& in, Query& q)
+	{
+		if (q.where.pstack.size() > 1)
+		{
+			auto g = std::make_unique<logical::lambda>(eta);
+			swap(g->args, q.where.pstack);
+			q.where.f->args.emplace_back(std::move(g));
+		}
+		else if (q.where.pstack.size() == 1)
+		{
+			q.where.f->args.push_back(
+			    std::move(q.where.pstack.back()));
+			q.where.pstack.pop_back();
+		}
+		else if (q.where.f->args.size() > 1)
+		{
+			q.where.f->eta = eta;
+			auto g = std::make_unique<logical::lambda>();
+			g->args.emplace_back(std::move(q.where.f));
+			q.where.f = std::move(g);
+		}
+	}
+};
+
+template <>
+struct action<syntax::search_condition> :
+	condition_action<logical::op::disjunction>
+{};
+
+template <>
+struct action<syntax::boolean_term> :
+	condition_action<logical::op::conjunction>
+{};
+
+template <>
+struct action<syntax::negative_test>
+{
+	template <typename Input>
+	static void apply(Input const& in, Query& q)
+	{
+		if (not q.where.pstack.empty())
+		{
+			auto g = std::make_unique<logical::lambda>(
+			    logical::op::negation);
+			g->args.emplace_back(std::move(q.where.pstack.back()));
+			q.where.pstack.pop_back();
+			q.where.pstack.emplace_back(std::move(g));
+		}
+	}
+};
+
+template <>
+struct action<syntax::where_clause>
+{
+	template <typename Input>
+	static void apply(Input const& in, Query& q)
+	{
+		auto& f = q.where.f;
+		if (f->args.empty())
+			f.reset();
+		else if (f->args.size() == 1 and
+		         f->eta == logical::op::identity and
+		         f->args.front().f != nullptr)
+			swap(f, f->args.front().f);
 	}
 };
 
