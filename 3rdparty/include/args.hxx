@@ -747,7 +747,7 @@ namespace args
              */
             std::vector<Base *>::size_type MatchedChildren() const
             {
-                return std::count_if(std::begin(children), std::end(children), [](const Base *child){return child->Matched();});
+                return std::vector<Base *>::size_type(std::count_if(std::begin(children), std::end(children), [](const Base *child){return child->Matched();}));
             }
 
             /** Whether or not this group matches validation

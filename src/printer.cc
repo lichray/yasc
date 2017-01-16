@@ -22,12 +22,12 @@ void print(row_value const& v, writeall_t cb)
 	    [&](int64_t n) {
 		    char buf[21];
 		    auto e = internal::i64toa(n, buf);
-		    cb(buf, e - buf);
+		    cb(buf, size_t(e - buf));
 	    },
 	    [&](double d) {
 		    char buf[25];
 		    auto e = internal::dtoa(d, buf, 324);
-		    cb(buf, e - buf);
+		    cb(buf, size_t(e - buf));
 	    },
 	    [&](string_view sv) {
 		    auto half_to_hex = [](int c) {
@@ -46,7 +46,7 @@ void print(row_value const& v, writeall_t cb)
 			        c != '\\')
 				    continue;
 
-			    cb(bp, p - bp);
+			    cb(bp, size_t(p - bp));
 			    bp = p + 1;
 			    if (c == '\t')
 				    cb_ntbs("\\t");
@@ -67,7 +67,7 @@ void print(row_value const& v, writeall_t cb)
 				    cb(buf.data(), buf.size());
 			    }
 		    }
-		    if (auto off = p - bp)
+		    if (auto off = size_t(p - bp))
 			    cb(bp, off);
 
 		    cb_ntbs("\"");

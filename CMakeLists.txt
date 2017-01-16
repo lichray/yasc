@@ -14,7 +14,7 @@ if(MINGW)
 endif()
 
 if(NOT MSVC)
-	add_definitions(-Wall -Wconversion -Wsign-compare)
+	add_definitions(-Wall -Wconversion -Wsign-conversion -Wsign-compare)
 	set(CMAKE_CXX_EXTENSIONS OFF)
 else()
 	foreach(flagvar CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
