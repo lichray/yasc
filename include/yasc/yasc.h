@@ -34,7 +34,7 @@ struct SelectList
 
 	auto count() const noexcept
 	{
-		return v_.size();
+		return int(v_.size());
 	}
 
 	template <typename T>
@@ -61,7 +61,7 @@ struct TableReferences
 
 	auto count() const noexcept
 	{
-		return v_.size();
+		return int(v_.size());
 	}
 
 	decltype(auto) operator[](int i) const

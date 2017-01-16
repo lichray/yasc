@@ -37,3 +37,12 @@ if(BUILD_TESTING)
 	target_link_libraries(run yasd)
 	add_test(testall tests/run)
 endif()
+
+file(GLOB demo_srcs demo/*.cc)
+
+foreach(demo_src ${demo_srcs})
+	get_filename_component(demo ${demo_src} NAME_WE)
+	add_executable(${demo} ${demo_src})
+	target_link_libraries(${demo} yasd)
+	set_target_properties(${demo} PROPERTIES RUNTIME_OUTPUT_DIRECTORY demo)
+endforeach()
