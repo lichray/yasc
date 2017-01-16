@@ -138,6 +138,8 @@ struct signature<R(Args...)>
 		f_(reinterpret_cast<intptr_t>(std::addressof(f)))
 	{}
 
+	explicit signature() noexcept : cb_(nullptr), f_() {}
+
 	template
 	<
 	    typename F,

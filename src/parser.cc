@@ -1,7 +1,9 @@
 #include "parser.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <algorithm>
+#include <system_error>
 
 #include <pegtl.hh>
 #include <pegtl/trace.hh>
@@ -432,6 +434,17 @@ struct action<syntax::where_clause>
 	}
 };
 
+template <>
+struct action<syntax::statement>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query& q)
+	{
+		st.callback(std::move(q));
+		q = {};
+	}
+};
+
 Query parse_query(string_view s)
 {
 	states st;
@@ -439,6 +452,34 @@ Query parse_query(string_view s)
 	pegtl::parse_memory<syntax::query_grammar, action>(
 	    s.data(), s.data() + s.size(), "<input>", st, q);
 	return q;
+}
+
+void parse_script(char const* name, query_handler_t cb)
+{
+	auto file_open = [](char const* fn, char const* mode) {
+		FILE* in;
+#if defined(WIN32)
+		if (fopen_s(&in, fn, mode) != 0)
+#else
+		if ((in = fopen(fn, mode)) == nullptr)
+#endif
+			throw std::system_error(errno, std::system_category());
+
+		return std::unique_ptr<FILE, decltype(&fclose)>(in, fclose);
+	};
+
+	Query q;
+	states st = { cb };
+
+	if (name[0] == '-' and name[1] == '\0')
+		pegtl::parse_cstream<syntax::grammar, action>(
+		    stdin, "<stdin>", 2048, st, q);
+	else
+	{
+		auto fp = file_open(name, "r");
+		pegtl::parse_cstream<syntax::grammar, action>(
+		    fp.get(), name, 2048, st, q);
+	}
 }
 
 }

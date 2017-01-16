@@ -164,7 +164,10 @@ struct Query
 	bool distinct = false;
 };
 
+using query_handler_t = signature<void(Query)>;
+
 Query parse_query(string_view s);
+void parse_script(char const* name, query_handler_t cb);
 
 inline void print(string_view sv, writeall_t cb)
 {
