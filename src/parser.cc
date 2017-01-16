@@ -469,7 +469,7 @@ void parse_script(char const* name, query_handler_t cb)
 	};
 
 	Query q;
-	states st = { cb };
+	states st{ cb };
 
 	if (name[0] == '-' and name[1] == '\0')
 		pegtl::parse_cstream<syntax::grammar, action>(
