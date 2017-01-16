@@ -21,7 +21,7 @@ TEST_CASE("query with conditions")
 
 	q = yasc::parse_query(R"q(
         select * from A, B
-         where A.c = 'nice'' ' 'boat' and A.cnt_ > 0 or B.hg <= 4
+         where A.c = 'nice'' ' 'boat' and A.cnt_ > 0 or B.hg <= 3.4
            and not b < -3000 or title is null
 	)q");
 
@@ -49,7 +49,7 @@ TEST_CASE("query with conditions")
 
 	REQUIRE(expr.f == yasc::xpr::op::less_than_or_equals);
 	REQUIRE(expr.x.get<yasc::xpr::column>().id == "B.hg");
-	REQUIRE(expr.y.get<int64_t>() == 4);
+	REQUIRE(expr.y.get<double>() == 3.4);
 
 	expr = q.where.f->args[1].f->args[1].f->args[0].test;
 

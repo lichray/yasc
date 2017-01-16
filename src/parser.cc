@@ -70,10 +70,27 @@ struct from_clause :
 
 struct sign : one<'+', '-'> {};
 struct nonzero_digit : ranges<'1', '9'> {};
-struct decimal_literal :
-	sor<one<'0'>, seq<nonzero_digit, star<digit>>>
-{};
+struct digit_sequence : star<digit> {};
+
+struct decimal_literal : sor<one<'0'>, seq<nonzero_digit, digit_sequence>> {};
 struct integer_literal : seq<opt<sign>, decimal_literal> {};
+
+struct fractional_constant :
+	sor
+	<
+	    seq<opt<digit_sequence>, one<'.'>, digit_sequence>,
+	    seq<digit_sequence, one<'.'>>
+	>
+{};
+struct exponent_part : seq<one<'e', 'E'>, opt<sign>, digit_sequence> {};
+struct decimal_floating_literal :
+	sor
+	<
+	    seq<fractional_constant, opt<exponent_part>>,
+	    seq<digit_sequence, exponent_part>
+	>
+{};
+struct floating_literal : seq<opt<sign>, decimal_floating_literal> {};
 
 struct characters : unescape_adjacent<'\''> {};
 struct character_string_literal :
@@ -90,6 +107,7 @@ struct row_value_expression :
 	<
 	    column_reference,
 	    character_string_literal,
+	    floating_literal,
 	    integer_literal
 	>
 {};
@@ -263,6 +281,18 @@ struct action<syntax::integer_literal>
 	{
 		auto p = const_cast<char*>(in.end());
 		int64_t v = strtoll(in.begin(), &p, 10);
+		st.vstack.emplace_back(v);
+	}
+};
+
+template <>
+struct action<syntax::floating_literal>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query&)
+	{
+		auto p = const_cast<char*>(in.end());
+		double v = strtod(in.begin(), &p);
 		st.vstack.emplace_back(v);
 	}
 };
