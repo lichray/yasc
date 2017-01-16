@@ -66,43 +66,57 @@ int main(int argc, char** argv)
 	{
 		std::cerr << e.what() << std::endl;
 		std::cerr << parser;
-		return 1;
+		return 2;
 	}
 	catch (args::ValidationError e)
 	{
 		std::cerr << parser;
-		return 1;
+		return 2;
 	}
 
-	c_file_writer w{ stdout };
-	yasc::parse_script(get(fname).data(), [&, i = 0](auto q) mutable {
-		if (i++)
-			putc('\n', w.fp);
+	try
+	{
+		c_file_writer w{ stdout };
+		yasc::parse_script(
+		    get(fname).data(), [&, i = 0](auto q) mutable {
+			    if (i++)
+				    putc('\n', w.fp);
 
-		if (q.select.all_columns())
-			q.select.append("*");
-		move_constants_to_right(q);
+			    if (q.select.all_columns())
+				    q.select.append("*");
+			    move_constants_to_right(q);
 
-		fprintf(w.fp, "Query#%d:\n", i);
-		fprintf(w.fp, "select (%d): ", q.select.count());
-		print_list(q.select, w);
-		putc('\n', w.fp);
-		fprintf(w.fp, "from   (%d): ", q.from.count());
-		print_list(q.from, w);
-		putc('\n', w.fp);
+			    fprintf(w.fp, "Query#%d:\n", i);
+			    fprintf(w.fp, "select (%d): ", q.select.count());
+			    print_list(q.select, w);
+			    putc('\n', w.fp);
+			    fprintf(w.fp, "from   (%d): ", q.from.count());
+			    print_list(q.from, w);
+			    putc('\n', w.fp);
 
-		int n = 0;
-		q.where.f->walk([&](auto&) { ++n; });
-		fprintf(w.fp, "where  (%d): ", n);
-		n = 0;
-		q.where.f->walk([&](auto& a) {
-			using yasc::print;
-			if (n)
-				print(", ", w);
-			else
-				n = 1;
-			print(a, w);
-		});
-		putc('\n', w.fp);
-	});
+			    int n = 0;
+			    q.where.f->walk([&](auto&) { ++n; });
+			    fprintf(w.fp, "where  (%d): ", n);
+			    n = 0;
+			    q.where.f->walk([&](auto& a) {
+				    using yasc::print;
+				    if (n)
+					    print(", ", w);
+				    else
+					    n = 1;
+				    print(a, w);
+			    });
+			    putc('\n', w.fp);
+		    });
+	}
+	catch (std::system_error& exc)
+	{
+		fprintf(stderr, "%s: %s\n", get(fname).data(), exc.what());
+		return 1;
+	}
+	catch (std::runtime_error& exc)
+	{
+		fprintf(stderr, "%s\n", exc.what());
+		return 1;
+	}
 }
