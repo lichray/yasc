@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include <stdlib.h>
+#include <algorithm>
 
 #include <pegtl.hh>
 #include <pegtl/trace.hh>
@@ -37,10 +38,9 @@ struct str_distinct : pegtl_istring_t("distinct") {};
 struct set_quantifier : sor<str_distinct, pegtl_istring_t("all")> {};
 
 template <char c>
-using unescape_adjacent = sor<not_one<c>, two<c>>;
+using unescape_adjacent = star<sor<not_one<c>, two<c>>>;
 
-struct delimited_identifier_part : unescape_adjacent<'"'> {};
-struct delimited_identifier_body : star<delimited_identifier_part> {};
+struct delimited_identifier_body : unescape_adjacent<'"'> {};
 struct delimited_identifier :
 	if_must<one<'"'>, delimited_identifier_body, one<'"'>>
 {};
@@ -75,11 +75,24 @@ struct decimal_literal :
 {};
 struct integer_literal : seq<opt<sign>, decimal_literal> {};
 
+struct characters : unescape_adjacent<'\''> {};
+struct character_string_literal :
+	list<if_must<one<'\''>, characters, one<'\''>>, plus<separator>>
+{};
+
 struct column_name : identifier {};
 struct column_reference :
 	seq<opt<table_name, one<'.'>>, column_name>
 {};
-struct row_value_expression : sor<column_reference, integer_literal> {};
+
+struct row_value_expression :
+	sor
+	<
+	    column_reference,
+	    character_string_literal,
+	    integer_literal
+	>
+{};
 
 struct comp_op :
 	sor
@@ -251,6 +264,38 @@ struct action<syntax::integer_literal>
 		auto p = const_cast<char*>(in.end());
 		int64_t v = strtoll(in.begin(), &p, 10);
 		st.vstack.emplace_back(v);
+	}
+};
+
+template <>
+struct action<syntax::characters>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query&)
+	{
+		auto b = in.begin();
+		for (;;)
+		{
+			auto e = std::find(b, in.end(), '\'');
+			if (e == in.end())
+			{
+				st.unescaped.append(b, e);
+				break;
+			}
+
+			st.unescaped.append(b, ++e);
+			b = ++e;
+		}
+	}
+};
+
+template <>
+struct action<syntax::character_string_literal>
+{
+	template <typename Input>
+	static void apply(Input const& in, states& st, Query&)
+	{
+		st.vstack.emplace_back(std::move(st.unescaped));
 	}
 };
 
