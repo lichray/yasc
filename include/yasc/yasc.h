@@ -8,6 +8,8 @@
 namespace yasc
 {
 
+using writeall_t = signature<void(char const*, size_t)>;
+
 struct SelectList
 {
 	bool all_columns() const noexcept
@@ -105,6 +107,9 @@ struct predicate
 	xpr::row_value x, y;
 };
 
+void print(predicate const&, writeall_t);
+void print(row_value const&, writeall_t);
+
 }
 
 namespace logical
@@ -160,5 +165,24 @@ struct Query
 };
 
 Query parse_query(string_view s);
+
+inline void print(string_view sv, writeall_t cb)
+{
+	cb(sv.data(), sv.size());
+}
+
+template <typename T>
+inline void print_list(T const& v, writeall_t cb)
+{
+	bool more = false;
+	for (auto& x : v)
+	{
+		if (more)
+			cb(", ", 2);
+		else
+			more = true;
+		print(x, cb);
+	}
+}
 
 }
