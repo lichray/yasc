@@ -482,4 +482,15 @@ void parse_script(char const* name, query_handler_t cb)
 	}
 }
 
+void logical::lambda::walk(signature<void(xpr::predicate&)> cb)
+{
+	for (auto& a : args)
+	{
+		if (a.f == nullptr)
+			cb(a.test);
+		else
+			a.f->walk(cb);
+	}
+}
+
 }

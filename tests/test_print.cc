@@ -15,7 +15,7 @@ struct string_writer
 	std::string str;
 };
 
-TEST_CASE("print conditions")
+TEST_CASE("print predicates")
 {
 	auto q = yasc::parse_query(R"q(
         select * from A, B
@@ -33,4 +33,22 @@ TEST_CASE("print conditions")
 	REQUIRE(w.str ==
 	        R"s(A.c = "nice\"\tboat", B.hg <= -0.34)s"
 	        R"s(, b < -3000, title is not null)s");
+}
+
+TEST_CASE("print any predicates")
+{
+	auto q = yasc::parse_query(R"q(
+        select * from A, B
+         where A.c = 'meow''' or x > 42.
+           and not b<>-0 or title IS null
+	)q");
+
+	string_writer w;
+	q.where.f->walk([&](auto& a) {
+		using yasc::print;
+		print(a, w);
+		print("|", w);
+	});
+
+	REQUIRE(w.str == R"s(A.c = "meow'"|x > 42.0|b <> 0|title is null|)s");
 }

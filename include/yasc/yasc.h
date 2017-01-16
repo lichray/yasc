@@ -144,6 +144,8 @@ struct lambda
 	lambda() = default;
 	explicit lambda(op x) : eta(x) {}
 
+	void walk(signature<void(xpr::predicate&)> cb);
+
 	op eta;
 	std::vector<argument> args;
 };
