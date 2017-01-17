@@ -458,7 +458,7 @@ void parse_script(char const* name, query_handler_t cb)
 {
 	auto file_open = [](char const* fn, char const* mode) {
 		FILE* in;
-#if defined(WIN32)
+#if defined(_WIN32)
 		if (fopen_s(&in, fn, mode) != 0)
 #else
 		if ((in = fopen(fn, mode)) == nullptr)

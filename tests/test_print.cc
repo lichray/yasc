@@ -30,9 +30,10 @@ TEST_CASE("print predicates")
 	               std::mem_fn(&yasc::logical::argument::test));
 	yasc::print_list(v, w);
 
-	REQUIRE(w.str ==
-	        R"s(A.c = "nice\"\tboat", B.hg <= -0.34)s"
-	        R"s(, b < -3000, title is not null)s");
+	char s[] =
+	    R"s(A.c = "nice\"\tboat", B.hg <= -0.34)s"
+	    R"s(, b < -3000, title is not null)s";
+	REQUIRE(w.str == s);
 }
 
 TEST_CASE("print any predicates")
