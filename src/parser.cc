@@ -454,6 +454,13 @@ Query parse_query(string_view s)
 	return q;
 }
 
+static void parse_script(FILE* fp, char const* name, query_handler_t cb)
+{
+	Query q;
+	states st{ cb };
+	pegtl::parse_cstream<syntax::grammar, action>(fp, name, 2048, st, q);
+}
+
 void parse_script(char const* name, query_handler_t cb)
 {
 	auto file_open = [](char const* fn, char const* mode) {
@@ -468,18 +475,10 @@ void parse_script(char const* name, query_handler_t cb)
 		return std::unique_ptr<FILE, decltype(&fclose)>(in, fclose);
 	};
 
-	Query q;
-	states st{ cb };
-
 	if (name[0] == '-' and name[1] == '\0')
-		pegtl::parse_cstream<syntax::grammar, action>(
-		    stdin, "<stdin>", 2048, st, q);
+		parse_script(stdin, "<stdin>", cb);
 	else
-	{
-		auto fp = file_open(name, "r");
-		pegtl::parse_cstream<syntax::grammar, action>(
-		    fp.get(), name, 2048, st, q);
-	}
+		parse_script(file_open(name, "r").get(), name, cb);
 }
 
 void logical::lambda::walk(signature<void(xpr::predicate&)> cb)
