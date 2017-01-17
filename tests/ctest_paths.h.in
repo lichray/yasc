@@ -1,0 +1,3 @@
+#pragma once
+
+#define CTEST_SOURCE_DIR "@CMAKE_SOURCE_DIR@/tests"

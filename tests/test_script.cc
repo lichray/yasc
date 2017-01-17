@@ -1,11 +1,12 @@
 #include "doctest.h"
 
 #include <yasc/yasc.h>
+#include <ctest_paths.h>
 
 TEST_CASE("multiple statements")
 {
 	std::vector<yasc::Query> v;
-	yasc::parse_script("tests/test_p3.sql",
+	yasc::parse_script(CTEST_SOURCE_DIR "/test_p3.sql",
 	                   [&](auto q) { v.push_back(std::move(q)); });
 
 	REQUIRE(v.size() == 2);
