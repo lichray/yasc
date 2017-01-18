@@ -12,13 +12,13 @@ TEST_CASE("query without filter")
 	REQUIRE(q.from[0] == "T1");
 	REQUIRE(q.from[1] == "T2");
 
-	q = yasc::parse_query("select foo, \"\"\"b ar\" from meow");
+	q = yasc::parse_query(R"s(select foo, """b ar" from meow)s");
 
 	REQUIRE(q.distinct == false);
 	REQUIRE(q.select.all_columns() == false);
 	REQUIRE(q.select.count() == 2);
 	REQUIRE(q.select[0] == "foo");
-	// REQUIRE(q.select[1] == "\"b ar");
+	REQUIRE(q.select[1] == R"s("""b ar")s");
 	REQUIRE(q.from.count() == 1);
 	REQUIRE(*q.from.begin() == "meow");
 
