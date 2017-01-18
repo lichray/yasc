@@ -347,8 +347,7 @@ struct action<syntax::boolean_test>
 	template <typename Input>
 	static void apply(Input const& in, states& st, Query& q)
 	{
-		if (st.pending == xpr::op::is_null or
-		    st.pending == xpr::op::is_not_null)
+		if (is_unary(st.pending))
 			st.pstack.emplace_back(st.pending,
 			                       std::move(st.vstack.back()));
 		else

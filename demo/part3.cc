@@ -18,8 +18,8 @@ static void move_constants_to_right(yasc::Query& q)
 	using namespace yasc;
 
 	q.where.f->walk([](xpr::predicate& a) {
-		if (a.f != xpr::op::is_null and a.f != xpr::op::is_not_null and
-		    not a.x.is<xpr::column>() and a.y.is<xpr::column>())
+		if (not is_unary(a.f) and not a.x.is<xpr::column>() and
+		    a.y.is<xpr::column>())
 		{
 			using std::swap;
 			swap(a.x, a.y);

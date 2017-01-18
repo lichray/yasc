@@ -101,6 +101,11 @@ enum struct op
 	is_not_null,
 };
 
+inline bool is_unary(op eta)
+{
+	return int(op::is_null) <= int(eta);
+}
+
 struct predicate
 {
 	op f;
