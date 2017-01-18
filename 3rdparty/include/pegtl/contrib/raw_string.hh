@@ -4,6 +4,7 @@
 #ifndef PEGTL_CONTRIB_RAW_STRING_HH
 #define PEGTL_CONTRIB_RAW_STRING_HH
 
+#include "../config.hh"
 #include "../nothing.hh"
 #include "../apply_mode.hh"
 #include "../rewind_mode.hh"
@@ -15,7 +16,7 @@
 
 #include "../analysis/generic.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -41,8 +42,8 @@ namespace pegtl
             using eol_t = typename Input::eol_t;
             using action_t = typename Input::action_t;
             const auto * const begin = in.begin() - size + in.size( 0 ) + count;
-            const action_t content( byte, line, byte_in_line, begin + ( ( * begin ) == eol_t::ch ), in.begin() - count, in.source() );
-            Action< Tag >::apply( content, st ... );
+            const action_t action_in( byte, line, byte_in_line, begin + ( ( * begin ) == eol_t::ch ), in.begin() - count, in.source() );
+            Action< Tag >::apply( action_in, st ... );
          }
 
          template< apply_mode A, rewind_mode, template< typename ... > class Action, template< typename ... > class Control, typename Input, typename ... States >
@@ -159,6 +160,6 @@ namespace pegtl
       using close = internal::until< internal::raw_string_close< Tag, Intermediate, Close > >;
    };
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

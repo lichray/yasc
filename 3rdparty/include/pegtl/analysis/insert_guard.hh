@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2016 Dr. Colin Hirsch and Daniel Frey
+// Copyright (c) 2014-2017 Dr. Colin Hirsch and Daniel Frey
 // Please see LICENSE for license or visit https://github.com/ColinH/PEGTL/
 
 #ifndef PEGTL_ANALYSIS_INSERT_GUARD_HH
@@ -6,7 +6,9 @@
 
 #include <utility>
 
-namespace pegtl
+#include "../config.hh"
+
+namespace PEGTL_NAMESPACE
 {
    namespace analysis
    {
@@ -14,16 +16,16 @@ namespace pegtl
       class insert_guard
       {
       public:
-         insert_guard( insert_guard && g ) noexcept
-               : m_i( g.m_i ),
-                 m_c( g.m_c )
+         insert_guard( insert_guard && other ) noexcept
+               : m_i( other.m_i ),
+                 m_c( other.m_c )
          {
-            g.m_c = 0;
+            other.m_c = nullptr;
          }
 
-         insert_guard( C & c, const typename C::value_type & t )
-               : m_i( c.insert( t ) ),
-                 m_c( & c )
+         insert_guard( C & container, const typename C::value_type & value )
+               : m_i( container.insert( value ) ),
+                 m_c( & container )
          { }
 
          ~insert_guard()
@@ -46,14 +48,14 @@ namespace pegtl
          C * m_c;
       };
 
-      template< typename C, typename T >
-      insert_guard< C > make_insert_guard( C & c, const T & t )
+      template< typename C >
+      insert_guard< C > make_insert_guard( C & container, const typename C::value_type & value )
       {
-         return insert_guard< C >( c, t );
+         return insert_guard< C >( container, value );
       }
 
    } // namespace analysis
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

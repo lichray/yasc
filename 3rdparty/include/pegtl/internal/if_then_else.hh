@@ -4,6 +4,8 @@
 #ifndef PEGTL_INTERNAL_IF_THEN_ELSE_HH
 #define PEGTL_INTERNAL_IF_THEN_ELSE_HH
 
+#include "../config.hh"
+
 #include "sor.hh"
 #include "seq.hh"
 #include "not_at.hh"
@@ -14,7 +16,7 @@
 
 #include "../analysis/generic.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -27,11 +29,12 @@ namespace pegtl
          static bool match( Input & in, States && ... st )
          {
             auto m = in.template mark< M >();
+            using m_t = decltype( m );
 
             if ( Control< Cond >::template match< A, rewind_mode::REQUIRED, Action, Control >( in, st ... ) ) {
-               return m( Control< Then >::template match< A, rewind_mode::DONTCARE, Action, Control >( in, st ... ) );
+               return m( Control< Then >::template match< A, m_t::next_rewind_mode, Action, Control >( in, st ... ) );
             }
-            return m( Control< Else >::template match< A, rewind_mode::DONTCARE, Action, Control >( in, st ... ) );
+            return m( Control< Else >::template match< A, m_t::next_rewind_mode, Action, Control >( in, st ... ) );
          }
       };
 
@@ -40,6 +43,6 @@ namespace pegtl
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

@@ -4,13 +4,14 @@
 #ifndef PEGTL_INTERNAL_RULE_MATCH_TWO_HH
 #define PEGTL_INTERNAL_RULE_MATCH_TWO_HH
 
+#include "../config.hh"
 #include "../nothing.hh"
 #include "../apply_mode.hh"
 #include "../rewind_mode.hh"
 
 #include "rule_match_three.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -52,10 +53,8 @@ namespace pegtl
          {
             auto m = in.template mark< rewind_mode::REQUIRED >();  // TODO: Allow actions to opt-out of receiving input data?
 
-            using action_t = typename Input::action_t;
-
-            if ( rule_match_two< Rule, A, M, Action, Control, false >::match( in, st ... ) ) {
-               Action< Rule >::apply( action_t( m, in.data() ), st ... );
+            if ( rule_match_two< Rule, A, rewind_mode::ACTIVE, Action, Control, false >::match( in, st ... ) ) {
+               Control< Rule >::template apply< Action >( m, in, st ... );
                return m( true );
             }
             return false;
@@ -64,6 +63,6 @@ namespace pegtl
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

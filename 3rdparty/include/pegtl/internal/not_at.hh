@@ -4,6 +4,8 @@
 #ifndef PEGTL_INTERNAL_NOT_AT_HH
 #define PEGTL_INTERNAL_NOT_AT_HH
 
+#include "../config.hh"
+
 #include "trivial.hh"
 #include "skip_control.hh"
 #include "rule_conjunction.hh"
@@ -13,7 +15,7 @@
 
 #include "../analysis/generic.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -35,12 +37,12 @@ namespace pegtl
          static bool match( Input & in, States && ... st )
          {
             const auto m = in.template mark< rewind_mode::REQUIRED >();
-            return ! rule_conjunction< Rules ... >::template match< apply_mode::NOTHING, rewind_mode::DONTCARE, Action, Control >( in, st ... );
+            return ! rule_conjunction< Rules ... >::template match< apply_mode::NOTHING, rewind_mode::ACTIVE, Action, Control >( in, st ... );
          }
       };
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

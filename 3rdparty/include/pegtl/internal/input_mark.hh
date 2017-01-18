@@ -4,17 +4,42 @@
 #ifndef PEGTL_INTERNAL_INPUT_MARK_HH
 #define PEGTL_INTERNAL_INPUT_MARK_HH
 
+#include "../config.hh"
+
 #include "input_data.hh"
 
 #include "../rewind_mode.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
       template< rewind_mode M > class input_mark
       {
       public:
+         static constexpr rewind_mode next_rewind_mode = M;
+
+         explicit
+         input_mark( const input_data & )
+         { }
+
+         input_mark( input_mark && ) noexcept
+         { }
+
+         input_mark( const input_mark & ) = delete;
+         void operator= ( const input_mark & ) = delete;
+
+         bool operator() ( const bool result )
+         {
+            return result;
+         }
+      };
+
+      template<> class input_mark< rewind_mode::REQUIRED >
+      {
+      public:
+         static constexpr rewind_mode next_rewind_mode = rewind_mode::ACTIVE;
+
          explicit
          input_mark( input_data & i )
                : m_byte( i.byte ),
@@ -84,27 +109,8 @@ namespace pegtl
          input_data * m_input;
       };
 
-      template<> class input_mark< rewind_mode::DONTCARE >
-      {
-      public:
-         explicit
-         input_mark( const input_data & )
-         { }
-
-         input_mark( input_mark && ) noexcept
-         { }
-
-         input_mark( const input_mark & ) = delete;
-         void operator= ( const input_mark & ) = delete;
-
-         bool operator() ( const bool result )
-         {
-            return result;
-         }
-      };
-
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

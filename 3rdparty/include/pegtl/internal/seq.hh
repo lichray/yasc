@@ -4,6 +4,8 @@
 #ifndef PEGTL_INTERNAL_SEQ_HH
 #define PEGTL_INTERNAL_SEQ_HH
 
+#include "../config.hh"
+
 #include "trivial.hh"
 #include "skip_control.hh"
 #include "rule_conjunction.hh"
@@ -13,7 +15,7 @@
 
 #include "../analysis/generic.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -47,12 +49,13 @@ namespace pegtl
          static bool match( Input & in, States && ... st )
          {
             auto m = in.template mark< M >();
-            return m( rule_conjunction< Rules ... >::template match< A, rewind_mode::DONTCARE, Action, Control >( in, st ... ) );
+            using m_t = decltype( m );
+            return m( rule_conjunction< Rules ... >::template match< A, m_t::next_rewind_mode, Action, Control >( in, st ... ) );
          }
       };
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

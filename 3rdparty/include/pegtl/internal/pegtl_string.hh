@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 Dr. Colin Hirsch and Daniel Frey
+// Copyright (c) 2015-2017 Dr. Colin Hirsch and Daniel Frey
 // Please see LICENSE for license or visit https://github.com/ColinH/PEGTL/
 
 #ifndef PEGTL_INTERNAL_PEGTL_STRING_HH
@@ -7,9 +7,10 @@
 #include <type_traits>
 #include <cstddef>
 
+#include "../config.hh"
 #include "../ascii.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    // Inspired by https://github.com/irrequietus/typestring
    // Rewritten and reduced to what is needed for the PEGTL
@@ -47,17 +48,17 @@ namespace pegtl
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #define PEGTL_INTERNAL_EMPTY()
 #define PEGTL_INTERNAL_DEFER( X ) X PEGTL_INTERNAL_EMPTY()
 #define PEGTL_INTERNAL_EXPAND(...) __VA_ARGS__
 
 #define PEGTL_INTERNAL_STRING_AT( S, x, n ) \
-   pegtl::internal::string_at< S, ( 0##n < sizeof( x ) ) ? x[ 0##n ] : 0, ( 0##n < sizeof( x ) - 1 ) >::type
+   PEGTL_NAMESPACE::internal::string_at< S, ( 0##n < sizeof( x ) ) ? x[ 0##n ] : 0, ( 0##n < sizeof( x ) - 1 ) >::type
 
 #define PEGTL_INTERNAL_JOIN_8( M, S, x, n ) \
-   pegtl::internal::string_join<            \
+   PEGTL_NAMESPACE::internal::string_join<            \
    PEGTL_INTERNAL_DEFER( M )( S, x, n##0 ), \
    PEGTL_INTERNAL_DEFER( M )( S, x, n##1 ), \
    PEGTL_INTERNAL_DEFER( M )( S, x, n##2 ), \
@@ -80,12 +81,12 @@ namespace pegtl
    PEGTL_INTERNAL_EXPAND( \
       PEGTL_INTERNAL_EXPAND( \
          PEGTL_INTERNAL_EXPAND( \
-            pegtl::internal::string_max_length< PEGTL_INTERNAL_STRING_512( S, x, ), sizeof( x ) - 1 >::type ) ) )
+            PEGTL_NAMESPACE::internal::string_max_length< PEGTL_INTERNAL_STRING_512( S, x, ), sizeof( x ) - 1 >::type ) ) )
 
 #define pegtl_string_t( x ) \
-   PEGTL_INTERNAL_STRING( pegtl::ascii::string, x )
+   PEGTL_INTERNAL_STRING( PEGTL_NAMESPACE::ascii::string, x )
 
 #define pegtl_istring_t( x ) \
-   PEGTL_INTERNAL_STRING( pegtl::ascii::istring, x )
+   PEGTL_INTERNAL_STRING( PEGTL_NAMESPACE::ascii::istring, x )
 
 #endif

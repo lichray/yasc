@@ -4,6 +4,8 @@
 #ifndef PEGTL_INTERNAL_UNTIL_HH
 #define PEGTL_INTERNAL_UNTIL_HH
 
+#include "../config.hh"
+
 #include "eof.hh"
 #include "star.hh"
 #include "bytes.hh"
@@ -16,7 +18,7 @@
 
 #include "../analysis/generic.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -54,9 +56,10 @@ namespace pegtl
          static bool match( Input & in, States && ... st )
          {
             auto m = in.template mark< M >();
+            using m_t = decltype( m );
 
             while ( ! Control< Cond >::template match< A, rewind_mode::REQUIRED, Action, Control >( in, st ... ) ) {
-               if ( in.empty() || ( ! rule_conjunction< Rules ... >::template match< A, rewind_mode::DONTCARE, Action, Control >( in, st ... ) ) ) {
+               if ( in.empty() || ( ! rule_conjunction< Rules ... >::template match< A, m_t::next_rewind_mode, Action, Control >( in, st ... ) ) ) {
                   return false;
                }
             }
@@ -66,6 +69,6 @@ namespace pegtl
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

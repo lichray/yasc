@@ -6,6 +6,8 @@
 
 #include <type_traits>
 
+#include "../config.hh"
+
 #include "skip_control.hh"
 #include "trivial.hh"
 #include "not_at.hh"
@@ -18,7 +20,7 @@
 
 #include "../analysis/counted.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -50,9 +52,10 @@ namespace pegtl
          static bool match( Input & in, States && ... st )
          {
             auto m = in.template mark< M >();
+            using m_t = decltype( m );
 
             for ( unsigned i = 0; i != Min; ++i ) {
-               if ( ! rule_conjunction< Rules ... >::template match< A, rewind_mode::DONTCARE, Action, Control >( in, st ... ) ) {
+               if ( ! rule_conjunction< Rules ... >::template match< A, m_t::next_rewind_mode, Action, Control >( in, st ... ) ) {
                   return false;
                }
             }
@@ -61,12 +64,12 @@ namespace pegtl
                   return m( true );
                }
             }
-            return m( rule_match_three< not_at< Rules ... >, A, M, Action, Control >::match( in, st ... ) );
+            return m( rule_match_three< not_at< Rules ... >, A, m_t::next_rewind_mode, Action, Control >::match( in, st ... ) );  // NOTE that not_at<> will always rewind.
          }
       };
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

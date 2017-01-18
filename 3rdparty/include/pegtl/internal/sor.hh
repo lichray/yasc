@@ -4,6 +4,8 @@
 #ifndef PEGTL_INTERNAL_SOR_HH
 #define PEGTL_INTERNAL_SOR_HH
 
+#include "../config.hh"
+
 #include "skip_control.hh"
 
 #include "../apply_mode.hh"
@@ -11,7 +13,7 @@
 
 #include "../analysis/generic.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -29,17 +31,21 @@ namespace pegtl
 #else
             bool result = false;
             using swallow = bool[];
-            (void)swallow{ result = result || Control< Rules >::template match< A, rewind_mode::REQUIRED, Action, Control >( in, st ... ) ..., true };
+            (void)swallow{ result = result || Control< Rules >::template match< A, rewind_mode::REQUIRED, Action, Control >( in, st ... ) ... };
             return result;
 #endif
          }
       };
+
+      template<>
+      struct sor<>
+            : trivial< false > {};
 
       template< typename ... Rules >
       struct skip_control< sor< Rules ... > > : std::true_type {};
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2016 Dr. Colin Hirsch and Daniel Frey
+// Copyright (c) 2014-2017 Dr. Colin Hirsch and Daniel Frey
 // Please see LICENSE for license or visit https://github.com/ColinH/PEGTL/
 
 #ifndef PEGTL_INTERNAL_FILE_READER_HH
@@ -9,9 +9,10 @@
 #include <string>
 #include <utility>
 
+#include "../config.hh"
 #include "../input_error.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -63,19 +64,21 @@ namespace pegtl
          std::FILE * open() const
          {
             errno = 0;
+#if defined( _WIN32 )
             std::FILE * file;
-#if defined(_WIN32)
-            if ( fopen_s( &file, m_source.c_str(), "rb" ) == 0 )
+            if ( ::fopen_s( & file, m_source.c_str(), "rb" ) == 0 )
 #else
-            if ( ( file = std::fopen( m_source.c_str(), "rb" ) ) != nullptr )
+            if ( auto* file = std::fopen( m_source.c_str(), "rb" ) )
 #endif
+            {
                return file;
+            }
             PEGTL_THROW_INPUT_ERROR( "unable to fopen() file " << m_source << " for reading" );
          }
       };
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

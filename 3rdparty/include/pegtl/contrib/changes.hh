@@ -6,9 +6,10 @@
 
 #include <type_traits>
 
+#include "../config.hh"
 #include "../normal.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -19,16 +20,16 @@ namespace pegtl
          { }
       };
 
-      template< pegtl::apply_mode A, typename State >
-      using state_disable_helper = typename std::conditional< A == pegtl::apply_mode::ACTION, State, dummy_disabled_state >::type;
+      template< apply_mode A, typename State >
+      using state_disable_helper = typename std::conditional< A == apply_mode::ACTION, State, dummy_disabled_state >::type;
 
    } // namespace internal
 
-   template< typename Rule, typename State, template< typename ... > class Base = pegtl::normal >
+   template< typename Rule, typename State, template< typename ... > class Base = normal >
    struct change_state
          : public Base< Rule >
    {
-      template< pegtl::apply_mode A, pegtl::rewind_mode M, template< typename ... > class Action, template< typename ... > class Control, typename Input, typename ... States >
+      template< apply_mode A, rewind_mode M, template< typename ... > class Action, template< typename ... > class Control, typename Input, typename ... States >
       static bool match( Input & in, States && ... st )
       {
          internal::state_disable_helper< A, State > s;
@@ -41,11 +42,11 @@ namespace pegtl
       }
    };
 
-   template< typename Rule, template< typename ... > class Action, template< typename ... > class Base = pegtl::normal >
+   template< typename Rule, template< typename ... > class Action, template< typename ... > class Base = normal >
    struct change_action
          : public Base< Rule >
    {
-      template< pegtl::apply_mode A, rewind_mode M, template< typename ... > class, template< typename ... > class Control, typename Input, typename ... States >
+      template< apply_mode A, rewind_mode M, template< typename ... > class, template< typename ... > class Control, typename Input, typename ... States >
       static bool match( Input & in, States && ... st )
       {
          return Base< Rule >::template match< A, M, Action, Control >( in, st ... );
@@ -58,11 +59,11 @@ namespace pegtl
       template< typename T > using change_action = change_action< T, Action, Base >;
    };
 
-   template< typename Rule, typename State, template< typename ... > class Action, template< typename ... > class Base = pegtl::normal >
+   template< typename Rule, typename State, template< typename ... > class Action, template< typename ... > class Base = normal >
    struct change_state_and_action
          : public change_state< Rule, State, change_both_helper< Action, Base >::template change_action >
    { };
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif

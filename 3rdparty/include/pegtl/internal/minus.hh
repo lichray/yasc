@@ -4,13 +4,15 @@
 #ifndef PEGTL_INTERNAL_MINUS_HH
 #define PEGTL_INTERNAL_MINUS_HH
 
+#include "../config.hh"
+
 #include "skip_control.hh"
 
 #include "../apply_mode.hh"
 #include "../rewind_mode.hh"
 #include "../memory_input.hh"
 
-namespace pegtl
+namespace PEGTL_NAMESPACE
 {
    namespace internal
    {
@@ -24,13 +26,13 @@ namespace pegtl
          {
             auto m = in.template mark< rewind_mode::REQUIRED >();
 
-            if ( ! Control< R >::template match< A, rewind_mode::DONTCARE, Action, Control >( in, st ... ) ) {
+            if ( ! Control< R >::template match< A, rewind_mode::ACTIVE, Action, Control >( in, st ... ) ) {
                return false;
             }
             using memory_t = typename Input::memory_t;
             memory_t i2( m, in.data() );
 
-            if ( ! Control< S >::template match< apply_mode::NOTHING, rewind_mode::DONTCARE, Action, Control >( i2, st ... ) ) {
+            if ( ! Control< S >::template match< apply_mode::NOTHING, rewind_mode::ACTIVE, Action, Control >( i2, st ... ) ) {
                return m( true );
             }
             return m( ! i2.empty() );
@@ -42,6 +44,6 @@ namespace pegtl
 
    } // namespace internal
 
-} // namespace pegtl
+} // namespace PEGTL_NAMESPACE
 
 #endif
