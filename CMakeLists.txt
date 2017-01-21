@@ -16,12 +16,6 @@ endif()
 if(NOT MSVC)
 	add_definitions(-Wall -Wconversion -Wsign-conversion -Wsign-compare)
 	set(CMAKE_CXX_EXTENSIONS OFF)
-else()
-	foreach(flagvar CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-	    CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-		string(REGEX REPLACE "/MD" "/MT" ${flagvar} "${${flagvar}}")
-		string(REGEX REPLACE "/MDd" "/MTd" ${flagvar} "${${flagvar}}")
-	endforeach()
 endif()
 
 include_directories(3rdparty/include)
@@ -30,7 +24,7 @@ include_directories(include)
 file(GLOB yasd_srcs src/*.cc src/*.cpp)
 file(GLOB tests_srcs tests/*.cc)
 
-add_library(yasd STATIC ${yasd_srcs})
+add_library(yasd ${yasd_srcs})
 
 if(BUILD_TESTING)
 	configure_file(tests/ctest_paths.h.in tests/ctest_paths.h)
