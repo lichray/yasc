@@ -2,7 +2,7 @@
 
 #include <stdex/string_view.h>
 #include <stdex/functional.h>
-#include <mapbox/variant.hpp>
+#include <stdex/oneof.h>
 
 #if defined(_MSC_VER)
 #include <ciso646>
@@ -12,5 +12,5 @@ namespace yasc
 {
 using stdex::string_view;
 using stdex::signature;
-using mapbox::util::variant;
+using stdex::oneof;
 }

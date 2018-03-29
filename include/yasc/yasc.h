@@ -87,7 +87,7 @@ struct column
 	std::string id;
 };
 
-using row_value = variant<int64_t, double, std::string, column>;
+using row_value = oneof<int64_t, double, std::string, column>;
 
 enum struct op
 {
